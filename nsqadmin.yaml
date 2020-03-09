@@ -1,0 +1,36 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nsqadmin
+spec:
+  ports:  
+  - name: http-port
+    port: 4171
+  selector:
+    app: nsqadmin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nsqadmin
+spec:
+  selector:
+    matchLabels:
+      app: nsqadmin
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nsqadmin
+    spec:
+      containers:
+      - name: nsqadmin
+        image: nsqio/nsq
+        ports:
+        - containerPort: 4171
+          name: http-port
+        command: ['/nsqadmin']
+        args: ['--lookupd-http-address=nsq-lookupd:4161']
+        imagePullPolicy: Always

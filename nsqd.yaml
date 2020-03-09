@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nsqd
+  labels:
+    app: nsqd
+spec:
+  clusterIP: None
+  ports:
+  - name: tcp-port
+    port: 4150
+  - name: http-port
+    port: 4151
+  selector:
+    app: nsqd
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nsqd
+spec:
+  serviceName: nsqd
+  replicas: 3 
+  selector:
+    matchLabels:
+      app: nsqd
+  template:
+    metadata:
+      labels:
+        app: nsqd
+    spec:
+      containers:
+      - name: nsqd
+        image: nsqio/nsq
+        env:
+        - name: MY_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        ports:
+        - containerPort: 4150
+          name: tcp-port
+        - containerPort: 4151
+          name: http-port
+        command: ['/nsqd']
+        args: ['--broadcast-address=$(MY_POD_IP)',
+               '--lookupd-tcp-address=nsq-lookupd:4160',
+               '--mem-queue-size=0',
+               '--verbose',
+               '--data-path=/data']
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: nsqd-data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: nsqd-data
+    spec:
+      storageClassName: pure-file
+      accessModes:
+      - ReadWriteMany
+      resources:
+        requests:
+          storage: 4Ti

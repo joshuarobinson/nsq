@@ -1,0 +1,29 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nsq-to-file
+spec:
+  selector:
+    matchLabels:
+      app: nsq-to-file
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nsq-to-file
+    spec:
+      containers:
+      - name: nsq-to-file
+        image: nsqio/nsq
+        command: ['/nsq_to_file']
+        args: ['--topic=flog', '--output-dir=/dropzone', '--lookupd-http-address=nsq-lookupd:4161']
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: nsq-to-file-data
+          mountPath: /dropzone
+      volumes:
+      - name: nsq-to-file-data
+        persistentVolumeClaim:
+          claimName: nsq-to-file-claim

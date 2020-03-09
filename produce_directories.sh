@@ -1,0 +1,1 @@
+pfind --ipaddr 10.61.204.100 --export /phonehome dev.purestorage.com/irp210-c01 -type d -name "blade_*" | xargs -P 8 -I{} kubectl exec -it pod/terminal -- curl -s -d {} 'http://nsqd:4151/pub?topic=phupdates'
